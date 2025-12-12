@@ -16,15 +16,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1764714051,
-        "narHash": "sha256-AjcMlM3UoavFoLzr0YrcvsIxALShjyvwe+o7ikibpCM=",
-        "owner": "hyprwm",
+        "lastModified": 1765523701,
+        "narHash": "sha256-w4sf16MYH+gUghN/gg09Pvg//FeGbRx+cXUMBmTVT6Y=",
+        "owner": "Flammable-Bunny",
         "repo": "aquamarine",
-        "rev": "a43bedcceced5c21ad36578ed823e6099af78214",
+        "rev": "137e1fe3dba39137f73de8ea048244f3327d6b0d",
         "type": "github"
       },
       "original": {
-        "owner": "hyprwm",
+        "owner": "Flammable-Bunny",
         "repo": "aquamarine",
         "type": "github"
       }
