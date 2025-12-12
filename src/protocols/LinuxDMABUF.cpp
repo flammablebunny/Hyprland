@@ -581,8 +581,8 @@ CLinuxDMABufV1Protocol::CLinuxDMABufV1Protocol(const wl_interface* iface, const 
             // Standard Intel/AMD tiled modifiers
             static constexpr std::array<uint64_t, 3> modifiers = {
                 DRM_FORMAT_MOD_LINEAR,           // 0x0 - linear/uncompressed
-                DRM_FORMAT_MOD_INTEL_X_TILED,   // Intel X tiling (0x0000000100000001)
-                DRM_FORMAT_MOD_INTEL_Y_TILED,   // Intel Y tiling (0x0000000100000002)
+                0x0000000100000001ULL,           // Intel X tiling
+                0x0000000100000002ULL,           // Intel Y tiling
             };
 
             for (uint32_t fmt : commonFormats) {
