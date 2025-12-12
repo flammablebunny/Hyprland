@@ -568,7 +568,7 @@ CLinuxDMABufV1Protocol::CLinuxDMABufV1Protocol(const wl_interface* iface, const 
             m_secondaryDeviceTranche.device = m_secondaryDevice;
             m_secondaryDeviceTranche.flags  = 0; // no special flags
 
-            // Add common formats with LINEAR modifier (required for mmap-based CPU copy)
+            // Add common formats with both LINEAR and tiled modifiers for secondary (Intel) GPU
             // Only formats supported by GLES (no GL_BGR in GLES)
             static constexpr std::array<uint32_t, 5> commonFormats = {
                 DRM_FORMAT_ARGB8888,
@@ -578,10 +578,17 @@ CLinuxDMABufV1Protocol::CLinuxDMABufV1Protocol(const wl_interface* iface, const 
                 DRM_FORMAT_RGB888,
             };
 
+            // Standard Intel/AMD tiled modifiers
+            static constexpr std::array<uint64_t, 3> modifiers = {
+                DRM_FORMAT_MOD_LINEAR,           // 0x0 - linear/uncompressed
+                DRM_FORMAT_MOD_INTEL_X_TILED,   // Intel X tiling (0x0000000100000001)
+                DRM_FORMAT_MOD_INTEL_Y_TILED,   // Intel Y tiling (0x0000000100000002)
+            };
+
             for (uint32_t fmt : commonFormats) {
                 m_secondaryDeviceTranche.formats.push_back(SDRMFormat{
                     .drmFormat = fmt,
-                    .modifiers = {DRM_FORMAT_MOD_LINEAR},
+                    .modifiers = {modifiers.begin(), modifiers.end()},
                 });
             }
 
