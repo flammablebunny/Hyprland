@@ -754,7 +754,7 @@ CConfigManager::CConfigManager() {
     registerConfigVar("group:groupbar:col.locked_active", Hyprlang::CConfigCustomValueType{&configHandleGradientSet, configHandleGradientDestroy, "0x66ff5500"});
     registerConfigVar("group:groupbar:col.locked_inactive", Hyprlang::CConfigCustomValueType{&configHandleGradientSet, configHandleGradientDestroy, "0x66775500"});
 
-    registerConfigVar("render:direct_scanout", Hyprlang::INT{0});
+    registerConfigVar("render:direct_scanout", Hyprlang::INT{1});
     registerConfigVar("render:expand_undersized_textures", Hyprlang::INT{1});
     registerConfigVar("render:xp_mode", Hyprlang::INT{0});
     registerConfigVar("render:ctm_animation", Hyprlang::INT{2});
