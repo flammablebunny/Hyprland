@@ -149,6 +149,8 @@ class CMonitor {
 
     bool                        m_ratsScheduled = false;
     CTimer                      m_lastPresentationTimer;
+    CTimer                      m_dsLogTimer;
+    CTimer                      m_dsSkipLogTimer;
 
     bool                        m_isBeingLeased = false;
 

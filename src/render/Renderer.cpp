@@ -1305,8 +1305,13 @@ void CHyprRenderer::renderMonitor(PHLMONITOR pMonitor, bool commit) {
         g_pLayoutManager->getCurrentLayout()->recalculateMonitor(pMonitor->m_id);
     }
 
-    if (!pMonitor->m_output->needsFrame && pMonitor->m_forceFullFrames == 0)
+    if (!pMonitor->m_output->needsFrame && pMonitor->m_forceFullFrames == 0) {
+        if (pMonitor->m_dsSkipLogTimer.getMillis() >= 1000.F) {
+            Debug::log(LOG, "direct scanout: skipped render on {} (needsFrame=0 forceFullFrames=0)", pMonitor->m_name);
+            pMonitor->m_dsSkipLogTimer.reset();
+        }
         return;
+    }
 
     // tearing and DS first
     bool shouldTear = pMonitor->updateTearing();

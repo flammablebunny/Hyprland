@@ -62,6 +62,9 @@ CMonitor::CMonitor(SP<Aquamarine::IOutput> output_) : m_state(this), m_output(ou
     m_backgroundOpacity->setUpdateCallback([this](auto) { g_pHyprRenderer->damageMonitor(m_self.lock()); });
     g_pAnimationManager->createAnimation(0.F, m_dpmsBlackOpacity, g_pConfigManager->getAnimationPropertyConfig("fadeDpms"), AVARDAMAGE_NONE);
     m_dpmsBlackOpacity->setUpdateCallback([this](auto) { g_pHyprRenderer->damageMonitor(m_self.lock()); });
+
+    m_dsLogTimer.reset();
+    m_dsSkipLogTimer.reset();
 }
 
 CMonitor::~CMonitor() {
@@ -1732,6 +1735,7 @@ uint16_t CMonitor::isDSBlocked(bool full) {
     static auto PNONSHADER     = CConfigValue<Hyprlang::INT>("render:non_shader_cm");
     static auto PDSLOG         = CConfigValue<Hyprlang::INT>("debug:direct_scanout_log");
     const bool  LOGDS          = *PDSLOG != 0;
+    const bool  FORCE_LOG      = LOGDS && m_dsLogTimer.getMillis() >= 1000.F;
 
     if (LOGDS)
         full = true;
@@ -1808,7 +1812,7 @@ uint16_t CMonitor::isDSBlocked(bool full) {
     if (needsCM() && *PNONSHADER != CM_NS_IGNORE && !canNoShaderCM() && ((inHDR() && (*PPASS == 0 || !surfaceIsHDR)) || (!inHDR() && (*PPASS != 1 || surfaceIsHDR))))
         reasons |= DS_BLOCK_CM;
 
-    if (LOGDS && reasons != m_lastDSBlockReason) {
+    if ((LOGDS && reasons != m_lastDSBlockReason) || FORCE_LOG) {
         std::string reasonStr;
         auto        appendReason = [&reasonStr](const char* name) {
             if (!reasonStr.empty())
@@ -1851,6 +1855,8 @@ uint16_t CMonitor::isDSBlocked(bool full) {
 
         Debug::log(LOG, "Direct scanout {} on {} (reasons: {})", reasons == DS_OK ? "allowed" : "blocked", m_name, reasonStr);
         m_lastDSBlockReason = reasons;
+        if (FORCE_LOG)
+            m_dsLogTimer.reset();
     }
 
     return reasons;
