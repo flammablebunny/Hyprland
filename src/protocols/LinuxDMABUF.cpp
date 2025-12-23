@@ -9,6 +9,7 @@
 #include <drm_fourcc.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <cstring>
 #include "core/Compositor.hpp"
 #include "types/DMABuffer.hpp"
 #include "types/WLBuffer.hpp"
@@ -261,26 +262,45 @@ bool CLinuxDMABUFParamsResource::commence() {
     if (!PROTO::linuxDma->m_mainDeviceFD.isValid())
         return true;
 
+    const bool logDMABUF = getenv("HYPRLAND_DMABUF_LOG") != NULL;
+
     for (int i = 0; i < m_attrs->planes; i++) {
         uint32_t handle = 0;
 
         // Try primary device first (e.g., AMD)
         int primaryResult = drmPrimeFDToHandle(PROTO::linuxDma->m_mainDeviceFD.get(), m_attrs->fds.at(i), &handle);
+        const int primaryErrno = primaryResult == 0 ? 0 : errno;
         if (primaryResult == 0) {
             // Primary device import succeeded
             if (drmCloseBufferHandle(PROTO::linuxDma->m_mainDeviceFD.get(), handle)) {
-                LOGM(ERR, "Failed to close dmabuf handle on primary device");
-                return false;
+            LOGM(ERR, "Failed to close dmabuf handle on primary device");
+            return false;
+        }
+        LOGM(LOG, "Cross-GPU: Plane {} imported successfully on primary device", i);
+        if (logDMABUF && g_pCompositor->m_secondaryDrmRenderNode.available && g_pCompositor->m_secondaryDrmRenderNode.fd >= 0) {
+            uint32_t secondaryHandle = 0;
+            int secondaryResult = drmPrimeFDToHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, m_attrs->fds.at(i), &secondaryHandle);
+            const int secondaryErrno = secondaryResult == 0 ? 0 : errno;
+            if (secondaryResult == 0) {
+                LOGM(LOG, "Cross-GPU debug: Plane {} also importable on secondary device", i);
+                    if (drmCloseBufferHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, secondaryHandle)) {
+                        LOGM(ERR, "Failed to close dmabuf handle on secondary device");
+                        return false;
+                    }
+                } else {
+                    LOGM(LOG, "Cross-GPU debug: Plane {} import failed on secondary device (errno: {}: {})", i, secondaryErrno,
+                         std::strerror(secondaryErrno));
+                }
             }
-            LOGM(LOG, "Cross-GPU: Plane {} imported successfully on primary device", i);
             continue;
         }
 
-        LOGM(WARN, "Cross-GPU: Primary device import failed for plane {} (errno: {}), trying secondary...", i, primaryResult);
+        LOGM(WARN, "Cross-GPU: Primary device import failed for plane {} (errno: {}: {}), trying secondary...", i, primaryErrno, std::strerror(primaryErrno));
 
         // Primary failed, try secondary device if available (e.g., Intel)
         if (g_pCompositor->m_secondaryDrmRenderNode.available && g_pCompositor->m_secondaryDrmRenderNode.fd >= 0) {
             int secondaryResult = drmPrimeFDToHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, m_attrs->fds.at(i), &handle);
+            const int secondaryErrno = secondaryResult == 0 ? 0 : errno;
             if (secondaryResult == 0) {
                 // Secondary device import succeeded - mark buffer as cross-GPU
                 m_attrs->crossGPU = true;
@@ -292,7 +312,7 @@ bool CLinuxDMABUFParamsResource::commence() {
                 }
                 continue;
             }
-            LOGM(WARN, "Cross-GPU: Secondary device import failed for plane {} (errno: {})", i, secondaryResult);
+            LOGM(WARN, "Cross-GPU: Secondary device import failed for plane {} (errno: {}: {})", i, secondaryErrno, std::strerror(secondaryErrno));
         } else {
             LOGM(WARN, "Cross-GPU: Secondary device not available (available: {}, fd: {})",
                  g_pCompositor->m_secondaryDrmRenderNode.available, g_pCompositor->m_secondaryDrmRenderNode.fd);
@@ -307,8 +327,8 @@ bool CLinuxDMABUFParamsResource::commence() {
         //
         // Do not reject the wl_buffer here; continue and let the renderer decide.
         LOGM(WARN,
-             "dmabuf import check failed: plane {} could not be imported via drmPrimeFDToHandle (primary: {}, secondary: {}), continuing anyway",
-             i, primaryResult, g_pCompositor->m_secondaryDrmRenderNode.available ? "checked" : "unavailable");
+             "dmabuf import check failed: plane {} could not be imported via drmPrimeFDToHandle (primary errno: {}, secondary: {}), continuing anyway",
+             i, primaryErrno, g_pCompositor->m_secondaryDrmRenderNode.available ? "checked" : "unavailable");
         m_attrs->crossGPU = true;
         continue;
     }
