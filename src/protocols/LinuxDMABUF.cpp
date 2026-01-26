@@ -272,7 +272,7 @@ bool CLinuxDMABUFParamsResource::commence() {
         if (primaryResult == 0) {
             // Primary device import succeeded
             if (drmCloseBufferHandle(PROTO::linuxDma->m_mainDeviceFD.get(), handle)) {
-                LOGM(ERR, "Failed to close dmabuf handle on primary device");
+                LOGM(Log::ERR, "Failed to close dmabuf handle on primary device");
                 return false;
             }
             LOGM(Log::DEBUG, "Cross-GPU: Plane {} imported successfully on primary device", i);
@@ -283,7 +283,7 @@ bool CLinuxDMABUFParamsResource::commence() {
                 if (secondaryResult == 0) {
                     LOGM(Log::DEBUG, "Cross-GPU debug: Plane {} also importable on secondary device", i);
                     if (drmCloseBufferHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, secondaryHandle)) {
-                        LOGM(ERR, "Failed to close dmabuf handle on secondary device");
+                        LOGM(Log::ERR, "Failed to close dmabuf handle on secondary device");
                         return false;
                     }
                 } else {
@@ -294,7 +294,7 @@ bool CLinuxDMABUFParamsResource::commence() {
             continue;
         }
 
-        LOGM(WARN, "Cross-GPU: Primary device import failed for plane {} (errno: {}: {}), trying secondary...", i, primaryErrno, std::strerror(primaryErrno));
+        LOGM(Log::WARN, "Cross-GPU: Primary device import failed for plane {} (errno: {}: {}), trying secondary...", i, primaryErrno, std::strerror(primaryErrno));
 
         // Primary failed, try secondary device if available (e.g., Intel)
         if (g_pCompositor->m_secondaryDrmRenderNode.available && g_pCompositor->m_secondaryDrmRenderNode.fd >= 0) {
@@ -306,14 +306,14 @@ bool CLinuxDMABUFParamsResource::commence() {
                 m_attrs->sourceDevice = g_pCompositor->m_secondaryDrmRenderNode.fd;
                 LOGM(Log::DEBUG, "Cross-GPU: Plane {} imported successfully via secondary render node", i);
                 if (drmCloseBufferHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, handle)) {
-                    LOGM(ERR, "Failed to close dmabuf handle on secondary device");
+                    LOGM(Log::ERR, "Failed to close dmabuf handle on secondary device");
                     return false;
                 }
                 continue;
             }
-            LOGM(WARN, "Cross-GPU: Secondary device import failed for plane {} (errno: {}: {})", i, secondaryErrno, std::strerror(secondaryErrno));
+            LOGM(Log::WARN, "Cross-GPU: Secondary device import failed for plane {} (errno: {}: {})", i, secondaryErrno, std::strerror(secondaryErrno));
         } else {
-            LOGM(WARN, "Cross-GPU: Secondary device not available (available: {}, fd: {})",
+            LOGM(Log::WARN, "Cross-GPU: Secondary device not available (available: {}, fd: {})",
                  g_pCompositor->m_secondaryDrmRenderNode.available, g_pCompositor->m_secondaryDrmRenderNode.fd);
         }
 
@@ -325,7 +325,7 @@ bool CLinuxDMABUFParamsResource::commence() {
         // buffers via other mechanisms (EGL import, CPU copy fallback, etc).
         //
         // Do not reject the wl_buffer here; continue and let the renderer decide.
-        LOGM(WARN,
+        LOGM(Log::WARN,
              "dmabuf import check failed: plane {} could not be imported via drmPrimeFDToHandle (primary errno: {}, secondary: {}), continuing anyway",
              i, primaryErrno, g_pCompositor->m_secondaryDrmRenderNode.available ? "checked" : "unavailable");
         m_attrs->crossGPU = true;
