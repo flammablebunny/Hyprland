@@ -124,7 +124,7 @@ in {
         owner = "stephenberry";
         repo = "glaze";
         rev = "v6.1.0";
-        hash = lib.fakeHash;
+        hash = "sha256-H1paMc0LH743aMHCO/Ocp96SaaoXLcl/MDmmbtSJG+Q=";
       };
     });
   };
