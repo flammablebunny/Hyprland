@@ -275,19 +275,19 @@ bool CLinuxDMABUFParamsResource::commence() {
                 LOGM(ERR, "Failed to close dmabuf handle on primary device");
                 return false;
             }
-            LOGM(LOG, "Cross-GPU: Plane {} imported successfully on primary device", i);
+            LOGM(Log::DEBUG, "Cross-GPU: Plane {} imported successfully on primary device", i);
             if (logDMABUF && g_pCompositor->m_secondaryDrmRenderNode.available && g_pCompositor->m_secondaryDrmRenderNode.fd >= 0) {
                 uint32_t secondaryHandle = 0;
                 int      secondaryResult = drmPrimeFDToHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, m_attrs->fds.at(i), &secondaryHandle);
                 const int secondaryErrno = secondaryResult == 0 ? 0 : errno;
                 if (secondaryResult == 0) {
-                    LOGM(LOG, "Cross-GPU debug: Plane {} also importable on secondary device", i);
+                    LOGM(Log::DEBUG, "Cross-GPU debug: Plane {} also importable on secondary device", i);
                     if (drmCloseBufferHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, secondaryHandle)) {
                         LOGM(ERR, "Failed to close dmabuf handle on secondary device");
                         return false;
                     }
                 } else {
-                    LOGM(LOG, "Cross-GPU debug: Plane {} import failed on secondary device (errno: {}: {})", i, secondaryErrno,
+                    LOGM(Log::DEBUG, "Cross-GPU debug: Plane {} import failed on secondary device (errno: {}: {})", i, secondaryErrno,
                          std::strerror(secondaryErrno));
                 }
             }
@@ -304,7 +304,7 @@ bool CLinuxDMABUFParamsResource::commence() {
                 // Secondary device import succeeded - mark buffer as cross-GPU
                 m_attrs->crossGPU = true;
                 m_attrs->sourceDevice = g_pCompositor->m_secondaryDrmRenderNode.fd;
-                LOGM(LOG, "Cross-GPU: Plane {} imported successfully via secondary render node", i);
+                LOGM(Log::DEBUG, "Cross-GPU: Plane {} imported successfully via secondary render node", i);
                 if (drmCloseBufferHandle(g_pCompositor->m_secondaryDrmRenderNode.fd, handle)) {
                     LOGM(ERR, "Failed to close dmabuf handle on secondary device");
                     return false;
@@ -624,10 +624,10 @@ CLinuxDMABufV1Protocol::CLinuxDMABufV1Protocol(const wl_interface* iface, const 
             // Some formats may not be in the main format table, which is fine
             bool allFound = m_formatTable->computeIndicesForTranche(m_secondaryDeviceTranche);
             if (!allFound) {
-                LOGM(LOG, "Cross-GPU: Some secondary device formats not in main format table (expected)");
+                LOGM(Log::DEBUG, "Cross-GPU: Some secondary device formats not in main format table (expected)");
             }
 
-            LOGM(LOG, "Cross-GPU: Secondary device tranche created with {} formats ({} indexed)",
+            LOGM(Log::DEBUG, "Cross-GPU: Secondary device tranche created with {} formats ({} indexed)",
                  commonFormats.size(), m_secondaryDeviceTranche.indices.size());
         }
     });
