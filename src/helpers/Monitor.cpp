@@ -1756,6 +1756,8 @@ uint16_t CMonitor::isDSBlocked(bool full) {
     const bool  LOGDS          = *PDSLOG != 0;
     const bool  FORCE_LOG      = LOGDS && m_dsLogTimer.getMillis() >= 1000.F;
     bool        earlyExit      = false;
+    const auto  PWAYWALL = m_solitaryClient.lock();
+    const bool  allowWaywall = PWAYWALL && PWAYWALL->m_class == "waywall";
 
     if (LOGDS)
         full = true;
@@ -1778,7 +1780,7 @@ uint16_t CMonitor::isDSBlocked(bool full) {
         }
     }
 
-    if (!earlyExit && m_tearingState.activelyTearing) {
+    if (!earlyExit && m_tearingState.activelyTearing && !allowWaywall) {
         reasons |= DS_BLOCK_TEARING;
         if (!full)
             earlyExit = true;

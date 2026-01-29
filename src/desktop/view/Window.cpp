@@ -1753,6 +1753,9 @@ SP<CWLSurfaceResource> CWindow::getSolitaryResource() {
     if (m_isX11)
         return res;
 
+    if (m_class == "waywall")
+        return res;
+
     if (popupsCount())
         return nullptr;
 
