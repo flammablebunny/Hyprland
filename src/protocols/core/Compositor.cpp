@@ -18,6 +18,7 @@
 #include "render/Texture.hpp"
 #include <cstring>
 #include <cstdlib>
+#include <functional>
 
 using namespace NColorManagement;
 
@@ -518,7 +519,7 @@ void CWLSurfaceResource::scheduleState(WP<SSurfaceState> state) {
         return threshold;
     };
 
-    auto fenceWaitCallback = [&](const char* kind) {
+    auto fenceWaitCallback = [&](const char* kind) -> std::function<void()> {
         if (!traceFenceWaitEnabled()) {
             return [state, whenReadable]() { whenReadable(state, LOCK_REASON_FENCE); };
         }
