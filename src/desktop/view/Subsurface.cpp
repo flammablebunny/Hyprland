@@ -176,7 +176,8 @@ void CSubsurface::onCommit() {
     if (!m_windowParent.expired()) {
         const auto WINDOW   = m_windowParent.lock();
         const auto PMONITOR = WINDOW ? WINDOW->m_monitor.lock() : nullptr;
-        if (PMONITOR && PMONITOR->m_solitaryClient.lock() == WINDOW && WINDOW->canBeTorn() && PMONITOR->m_tearingState.canTear && m_wlSurface->resource()->m_current.texture) {
+        const bool isWaywall = WINDOW && WINDOW->m_class == "waywall";
+        if (PMONITOR && (PMONITOR->m_solitaryClient.lock() == WINDOW || isWaywall) && WINDOW->canBeTorn() && PMONITOR->m_tearingState.canTear && m_wlSurface->resource()->m_current.texture) {
             CRegion damageBox{m_wlSurface->resource()->m_current.accumulateBufferDamage()};
 
             if (!damageBox.empty()) {
@@ -194,7 +195,7 @@ void CSubsurface::onCommit() {
                 Log::logger->log(Log::INFO, "Tearing: subsurface commit skipped (no damage) for {}", WINDOW);
             }
         } else if (TRACE_TEARING()) {
-            const bool solitary = PMONITOR && PMONITOR->m_solitaryClient.lock() == WINDOW;
+            const bool solitary = PMONITOR && (PMONITOR->m_solitaryClient.lock() == WINDOW || isWaywall);
             const bool canTear  = WINDOW && WINDOW->canBeTorn();
             const bool monTear  = PMONITOR && PMONITOR->m_tearingState.canTear;
             const bool texture  = m_wlSurface->resource()->m_current.texture != nullptr;
