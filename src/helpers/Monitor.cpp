@@ -1917,6 +1917,12 @@ bool CMonitor::attemptDirectScanout() {
         return false;
 
     const auto PCANDIDATE = m_solitaryClient.lock();
+    // Check PCANDIDATE is valid before calling methods on it
+    if (!PCANDIDATE) {
+        Log::logger->log(Log::TRACE, "attemptDirectScanout: candidate window is null");
+        return false;
+    }
+
     const auto PSURFACE   = PCANDIDATE->getSolitaryResource();
 
     // Check for valid buffer before attempting scanout
