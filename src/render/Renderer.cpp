@@ -1496,10 +1496,8 @@ void CHyprRenderer::renderMonitor(PHLMONITOR pMonitor, bool commit) {
     if (commit)
         commitPendingAndDoExplicitSync(pMonitor);
 
-    // In tearing mode, don't set busy - allow continuous rendering without waiting for frame events
-    // The kernel/Aquamarine will handle overlapping flips
-    // if (shouldTear)
-    //     pMonitor->m_tearingState.busy = true;
+    if (shouldTear)
+        pMonitor->m_tearingState.busy = true;
 
     if (*PDAMAGEBLINK || *PVFR == 0 || pMonitor->m_pendingFrame)
         g_pCompositor->scheduleFrameForMonitor(pMonitor, Aquamarine::IOutput::AQ_SCHEDULE_RENDER_MONITOR);
